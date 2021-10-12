@@ -3,15 +3,21 @@ from schedule_validation_checker import (
     make_daily_schedule,
     check_ascendance,
     check_enough_nurse,
-    check_enough_grade,
     ascend_shift
 )
 
-NURSES = 8
+NURSES = 32
+
 DAY_PER_MONTH = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-NAMES = ['강수현', '김재혁', '천민우', '윤영철', '윤창목', '배하은', '주영호', '주지환']
-nurse_grades = [0, 2, 1, 1, 2, 0, 1, 2]
-nurse_last_duty = [0, 2, 1, 3, 2, 0, 3, 2]
+
+NAMES = ['강수현', '김재혁', '천민우', '윤영철', '윤창목', '배하은', '주영호', '주지환',
+    '강수현', '김재혁', '천민우', '윤영철', '윤창목', '배하은', '주영호', '주지환',
+    '강수현', '김재혁', '천민우', '윤영철', '윤창목', '배하은', '주영호', '주지환',
+    '강수현', '김재혁', '천민우', '윤영철', '윤창목', '배하은', '주영호', '주지환']
+
+nurse_grades = [0, 2, 0, 1, 2, 0, 1, 0, 0, 2, 1, 1, 2, 0, 1, 2, 2, 1, 1, 2, 0, 1, 2, 0, 2, 1, 1, 2, 0, 1, 2, 0]
+
+nurse_last_duty = [0, 2, 1, 3, 2, 0, 3, 2, 0, 2, 1, 3, 2, 0, 3, 2, 2, 0, 2, 1, 3, 2, 0, 3, 2, 0, 2, 1, 3, 2, 0, 3,]
 
 
 def set_nurse_schedule(
@@ -44,8 +50,7 @@ def set_nurse_schedule(
     # 3) 유효성 검사
     validation_checks = [
         check_ascendance(temporary_schedule, nurse_last_duty, NURSES),
-        check_enough_nurse(temporary_schedule, NEEDED_NURSE, NURSES),
-        check_enough_grade(temporary_schedule, NURSE_GRADES, NURSES)
+        check_enough_nurse(temporary_schedule, NURSE_GRADES, NEEDED_NURSE, NURSES)
     ]
 
     # 분기
@@ -69,8 +74,7 @@ def set_nurse_schedule(
         # (3) 유효성 검사 결과 목록 업데이트.
         validation_checks = [
             check_ascendance(temporary_schedule, nurse_last_duty, NURSES),
-            check_enough_nurse(temporary_schedule, NEEDED_NURSE, NURSES),
-            check_enough_grade(temporary_schedule, NURSE_GRADES, NURSES)
+            check_enough_nurse(temporary_schedule, NURSE_GRADES, NEEDED_NURSE, NURSES)
         ]
 
     # B. 유효성 검사를 통과했을 때
@@ -96,8 +100,9 @@ def set_nurse_schedule(
 
 
 schedule_table = [[-1] * 31 for _ in range(NURSES)]
-set_nurse_schedule(10, [], [0, 2, 1, 3, 2, 0, 3, 2], nurse_grades)
+set_nurse_schedule(10, [], nurse_last_duty, nurse_grades)
+
 
 for nurse in range(NURSES):
-    print(f'GRADE{nurse_grades[nurse]} 간호사 {NAMES[nurse]}의 일정:{schedule_table[nurse]}')
+    print(f'GRADE{nurse_grades[nurse]} 간호사{nurse} {NAMES[nurse]}의 일정:{schedule_table[nurse]}')
 
