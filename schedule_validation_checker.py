@@ -9,11 +9,10 @@ last_duties: 이전 근무 기록을 담은 리스트.
 today_schedule: 현재 근무 기록을 담은 리스트.
 
 
-
 """
 
 
-def generate_random_token(number_of_nurses, last_duties):
+def generate_random_token(last_duties, number_of_nurses):
 
     nurse_generator_token = [0] * number_of_nurses
 
@@ -24,7 +23,7 @@ def generate_random_token(number_of_nurses, last_duties):
     return nurse_generator_token
 
 
-def check_ascendance(number_of_nurses, today_schedule, last_duties):
+def check_ascendance(today_schedule, last_duties, number_of_nurses):
     print('checking ascendance')
     print(today_schedule)
 
@@ -47,7 +46,7 @@ def ascend_shift(schedule_token_list):
     return schedule_token_list
 
 
-def make_daily_schedule(number_of_nurses, random_token_list):
+def make_daily_schedule(random_token_list, number_of_nurses):
     # 이후 구현할 것 = day_off_list 받아서..
 
     daily_schedule = [-1] * number_of_nurses
@@ -59,7 +58,7 @@ def make_daily_schedule(number_of_nurses, random_token_list):
     return daily_schedule
 
 
-def check_enough_grade(today_schedule, number_of_nurses, nurse_grade, exceptions=0):
+def check_enough_grade(today_schedule, nurse_grade, number_of_nurses, exceptions=0):
     # 모든 등급의 간호사가 1 명 이상 근무할 때.
 
     grade_zeros = 0
@@ -111,6 +110,9 @@ def check_enough_nurse(today_schedule, needed_nurse, number_of_nurses):
 
     print('근무 인원 부족')
     return False
+
+
+
     # print(f'필요 인원: {needed_nurse}')
     # if nurse_counter < needed_nurse:
     #     print(f"오늘 근무 인원 {needed_nurse - nurse_counter} 부족")
