@@ -13,12 +13,24 @@ today_schedule: 현재 근무 기록을 담은 리스트.
 
 
 def generate_random_token(last_duties, number_of_nurses):
+    """
+    랜덤 토큰 제작 함수.
+
+    * 입력 파라미터*
+    1. 간호사들의 마지막 근무 기록(list)
+    2. 간호사 총 인원(int)
+
+    * 출력 * 
+
+
+    """
+
     # print(number_of_nurses)
 
     nurse_generator_token = [0] * number_of_nurses
     
     for nurse in range(number_of_nurses):
-        token = last_duties[nurse] + random.random() + random.random()
+        token = last_duties[nurse] + random.random()
         nurse_generator_token[nurse] = token
 
     return nurse_generator_token
@@ -42,7 +54,7 @@ def check_ascendance(today_schedule, last_duties, number_of_nurses):
 def ascend_shift(schedule_token_list):
 
     for i in range(len(schedule_token_list)):
-        schedule_token_list[i] += 1
+        schedule_token_list[i] += 0.6
 
     return schedule_token_list
 
