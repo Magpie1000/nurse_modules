@@ -44,13 +44,13 @@ def make_daily_schedule(
             )
 
         # 3. 큐를 활용해 스케쥴 제작
-        daily_schedule = place_shifts(priority_que, IDEAL_SCHEDULE)
+        daily_schedule, grade_checker = place_shifts(priority_que, IDEAL_SCHEDULE)
 
         # 4. 검증
         # if is_validate(daily_schedule):
         # 추후 
         if True:
-            return daily_schedule
+            return daily_schedule, grade_checker
 
     return None
 
@@ -67,7 +67,8 @@ def make_priority_que(nurse_pk_list, nurse_info, current_date):
             priority = check_priority(nurse_detail, current_date, shift)
 
             if priority is not None:
-                heapq.heappush(shift_que, (priority, nurse_detail[0], shift)) 
+                nurse_grade = nurse_detail[1]
+                heapq.heappush(shift_que, (priority, nurse_pk, nurse_grade, shift)) 
 
     return shift_que
 
@@ -115,42 +116,58 @@ def check_priority(
     # 2. off가 꼭 필요한 경우.
     # 1) 이틀 연속으로 쉬게 해주기. 
     if OFF_STREAKS == 1 and not CURRENT_SHIFT:
-        return 0 + random.randrange(1, 40)
+        priority_token = random.randrange(1, 40)
+        return priority_token
 
     # 2) 5연속 근무 이후 휴무
     if SHIFT_STREAKS >= 5 and not CURRENT_SHIFT:
-        return 0 + random.randrange(1, 40)
+        priority_token = random.randrange(1, 40)
+        return priority_token
 
+    # 3) 휴가 신청일일 경우. 
     if VACATION_INFO == CURRENT_DAY:
-        return 0
+        priority_token = 0
+        return priority_token
 
     
     # 3. 기타 연속 근무
     if CURRENT_SHIFT and LAST_SHIFT == CURRENT_SHIFT:
-        return random.randrange(100, 500)
+        priority_token = random.randrange(100, 500)
+        return priority_token
 
-    
     # 4. 그 외의 근무
     # 원래는 1000~ 1200. 수정해보자.. 
     if CURRENT_SHIFT:
-        return random.randrange(150, 600)
+        priority_token = random.randrange(150, 600)
+        return priority_token
 
     else:   # 조건 없는 off. 원래는 1000 상수로 리턴했음. 
-        return 700
-
+        priority_token = 700
+        return priority_token
 
 
 def place_shifts(
     priority_que,
     ideal_schedule,
 ):
+    """
+    매개변수:
+    1. priority_que : 우선순위 큐
+    2. ideal_schedule: 한 shift당 한 팀에서 제공해야 하는 간호사 수.
+    
+    반환값:
+    1. schedule_table : 스케쥴 테이블
+    2. grade_counter_bit : 저연차 간호사만 근무하는 것을 방지하기 위한 비트값. 
+    """
     IDEAL_SCHEDULE = ideal_schedule
     schedule_table = [[] for _ in range(4)] # 각각 off, day, evening, night.
     current_schedule_counter = [0] * 4
+    # 비트마스킹을 활용, day, evening, night 에 근무자가 있는지 체크. 
+    grade_counter_bit = 0
     placed_nurse_set = set()
 
     while priority_que:
-        current_priority, nurse_number, shift = heapq.heappop(priority_que)
+        current_priority, nurse_number, nurse_grade, shift = heapq.heappop(priority_que)
         
         # 휴가 제외, 현재 확인중인 shift 가 꽉 차있으면..
         # 더 이상 근무를 배치하지 않음.
@@ -164,8 +181,13 @@ def place_shifts(
         current_schedule_counter[shift] += 1
         schedule_table[shift].append(nurse_number)
         placed_nurse_set.add(nurse_number)
+
+        # 간호사 grade가 1 이상이라면
+        # 비트에 1번...  
+        if nurse_grade > 0:
+            grade_counter_bit |= (1 << shift)
         
-    return schedule_table
+    return schedule_table, grade_counter_bit
 
 
 def update_nurse_info(nurse_info, temporary_schedule):
@@ -192,7 +214,6 @@ def update_nurse_info(nurse_info, temporary_schedule):
             nurse_info[nurse][9] = shift
 
             # 1) 휴무 
-
             # 만약 오늘 쉬었다면 
             # 연속 근무일수 초기화
             if not shift:
@@ -233,8 +254,6 @@ def update_nurse_info(nurse_info, temporary_schedule):
 
 
 
-
-
 # counter_sorted_list를 개인별 딕셔너리 형태로 출력물을 전환하는 함수.
 def transfer_table_to_dict(whole_schedule, nurse_pk_list, days_of_month):
     """
@@ -256,6 +275,77 @@ def transfer_table_to_dict(whole_schedule, nurse_pk_list, days_of_month):
 
 
     return result_dict
+
+
+# 분할 부분. 
+def divide_nurse_info_by_team(
+    team_list,
+    nurse_profile_dict,
+    nurse_last_months_schedule_dict
+    ):
+
+    """
+    매개변수:
+    0. team_list: 팀명... 
+    1. nurse_profile_dict: view 함수 중 get_nurse_info의 출력값.
+    key = pk
+    value = [pk, level, team, off_cnt]
+    2. nurse_last_months_schedule_dict: get_last_schedule의 출력값.
+    key = pk
+    value = [한 달 개인 듀티표]
+
+    출력값:
+
+    딕셔너리
+    Key: 팀 번호들
+    value: 팀에 속하는 간호사들의 info 딕셔너리
+    0 NURSE_NUMBER 간호사 일련번호
+    1 NURSE_GRADE 간호사 grade
+    2 TEAM_NUMBER 팀넘버
+    3 SHIFTS, 이번 달 근무 일수 
+    4 SHIFT_STREAKS, 연속 근무일 수 
+    5 OFFS, 그.. 마크다운에 있는 'OFF' 참조.
+    6 MONTHLY_NIGHT_SHIFTS, 한 달에 night 근무한 횟수
+    7 VACATION_INFO,   휴가 정보(외부 딕셔너리로 수정 예정)
+    8 OFF_STREAKS,         연속 휴무 
+    9 LAST_SHIFT,           마지막 근무 정보
+    
+    """
+    # 1. 선언
+    # 출력을 위한 dict 선언.
+    divided_nurse_info_dict_by_team = dict()
+    for team_number in team_list:
+        divided_nurse_info_dict_by_team[team_number] = dict()
+    
+    # 2. 연산
+    for nurse_detail in nurse_profile_dict:
+        # 1) 앞부분에 필요한 값들.
+        nurse_pk = nurse_detail[0]
+        nurse_grade = nurse_detail[1]
+        nurse_team = nurse_detail[2]
+        nurse_offs = nurse_detail[3]
+        
+        # 2) 뒷부분에 필요한 값들. 
+        nurse_last_month_schedule = nurse_last_months_schedule_dict[nurse_pk]
+        nurse_last_shift = nurse_last_month_schedule[-1]
+        nurse_off_streaks = 0
+        
+        # 3) 딕셔너리에 삽입
+        divided_nurse_info_dict_by_team[nurse_team][nurse_pk] = [
+            nurse_pk,
+            nurse_grade,
+            nurse_team,
+            0,
+            nurse_offs,
+            0,
+            0,
+            nurse_off_streaks,
+            nurse_last_shift
+        ]
+
+    return divided_nurse_info_dict_by_team
+
+
 
 
 
