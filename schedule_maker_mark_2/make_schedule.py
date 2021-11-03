@@ -17,7 +17,6 @@ MONTHS_LAST_DAY = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 def make_monthly_schedule(
     team_list, # -1. 팀 정보. 리스트. 
-    nurse_pk_list,  # 0. 간호사 PK 정보. 
     needed_nurses_shift_by_team,    # 3. shift당 필요한 간호사 수. 3의 배수로 기입 필수. 
     vacation_info,          # 4.연차 신청 정보. [딕셔너리. nurse_pk : set(날짜 묶음)]
     current_month,          # 5. 현재 월
@@ -40,7 +39,7 @@ def make_monthly_schedule(
     # 1. 선언
     # 1) 최종 결과값을 저장할 리스트 .
     whole_schedule = []
-    NUMBER_OF_NURSES = len(nurse_pk_list)
+    # NUMBER_OF_NURSES = len(nurse_pk_list)
     NUMBER_OF_TEAMS = len(team_list)
 
     # 2) 예외 처리를 위한 변수들 선언
@@ -58,12 +57,7 @@ def make_monthly_schedule(
         nurse_profile_dict=nurse_profile_dict,
         nurse_last_months_schedule_dict=nurse_last_month_schedule_dict
     )
-    pprint(nurse_info)
-    pprint(nurse_pk_list)
 
-
-    # 이 부분을 위의 함수에서 실제로 받아오는 방식대로 처리해야 한다. 
-    # nurse_pk_list = example_nurse_pk_dict
     # 1. 종료 조건
     # 정상 종료
     while current_date != MONTHS_LAST_DAY[current_month] + 1:
@@ -201,7 +195,7 @@ start_time = time.time()
 
 result, modified_nurse_info = make_monthly_schedule(
     team_list=[1, 2, 3],
-    nurse_pk_list=example_nurse_pk_list,
+    # nurse_pk_list=example_nurse_pk_list,
     needed_nurses_shift_by_team=1,
     vacation_info=[],
     current_month=10,
@@ -227,31 +221,31 @@ print(f'{(end_time - start_time)*1000}ms')
 
 
 
-example_nurse_info_dict = {
-    1 : {
-        1: [1, 0, 1, 0, 0, 0, 0, 0, 2, 0],
-        2: [2, 1, 1, 0, 0, 0, 0, 0, 2, 0],
-        3: [3, 2, 1, 0, 0, 0, 0, 0, 2, 0],
-        4: [4, 0, 1, 0, 0, 0, 0, 0, 2, 0],
-        5: [5, 1, 1, 0, 0, 0, 0, 0, 2, 0],
-        6: [6, 2, 1, 0, 0, 0, 0, 0, 2, 0]
-    },
+# example_nurse_info_dict = {
+#     1 : {
+#         1: [1, 0, 1, 0, 0, 0, 0, 0, 2, 0],
+#         2: [2, 1, 1, 0, 0, 0, 0, 0, 2, 0],
+#         3: [3, 2, 1, 0, 0, 0, 0, 0, 2, 0],
+#         4: [4, 0, 1, 0, 0, 0, 0, 0, 2, 0],
+#         5: [5, 1, 1, 0, 0, 0, 0, 0, 2, 0],
+#         6: [6, 2, 1, 0, 0, 0, 0, 0, 2, 0]
+#     },
 
-    2: {
-        7: [1, 0, 2, 0, 0, 0, 0, 0, 2, 0],
-        8: [2, 1, 2, 0, 0, 0, 0, 0, 2, 0],
-        9: [3, 2, 2, 0, 0, 0, 0, 0, 2, 0],
-        10: [4, 0, 2, 0, 0, 0, 0, 0, 2, 0],
-        11: [5, 1, 2, 0, 0, 0, 0, 0, 2, 0],
-        12: [6, 2, 2, 0, 0, 0, 0, 0, 2, 0],
-    },
+#     2: {
+#         7: [1, 0, 2, 0, 0, 0, 0, 0, 2, 0],
+#         8: [2, 1, 2, 0, 0, 0, 0, 0, 2, 0],
+#         9: [3, 2, 2, 0, 0, 0, 0, 0, 2, 0],
+#         10: [4, 0, 2, 0, 0, 0, 0, 0, 2, 0],
+#         11: [5, 1, 2, 0, 0, 0, 0, 0, 2, 0],
+#         12: [6, 2, 2, 0, 0, 0, 0, 0, 2, 0],
+#     },
 
-    3: {
-        13: [1, 0, 0, 0, 0, 0, 0, 0, 2, 0],
-        14: [2, 1, 0, 0, 0, 0, 0, 0, 2, 0],
-        15: [3, 2, 0, 0, 0, 0, 0, 0, 2, 0],
-        16: [4, 0, 0, 0, 0, 0, 0, 0, 2, 0],
-        17: [5, 1, 0, 0, 0, 0, 0, 0, 2, 0],
-        18: [6, 2, 0, 0, 0, 0, 0, 0, 2, 0],
-    }
-}
+#     3: {
+#         13: [1, 0, 0, 0, 0, 0, 0, 0, 2, 0],
+#         14: [2, 1, 0, 0, 0, 0, 0, 0, 2, 0],
+#         15: [3, 2, 0, 0, 0, 0, 0, 0, 2, 0],
+#         16: [4, 0, 0, 0, 0, 0, 0, 0, 2, 0],
+#         17: [5, 1, 0, 0, 0, 0, 0, 0, 2, 0],
+#         18: [6, 2, 0, 0, 0, 0, 0, 0, 2, 0],
+#     }
+# }
