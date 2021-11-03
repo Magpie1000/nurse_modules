@@ -1,6 +1,6 @@
 import heapq
 import random
-
+from pprint import pprint
 # 카운터 리스트 제작 함수 
 def make_ideal_counter(needed_nurses_per_shift):
     """
@@ -255,7 +255,7 @@ def update_nurse_info(nurse_info, temporary_schedule):
 
 
 # counter_sorted_list를 개인별 딕셔너리 형태로 출력물을 전환하는 함수.
-def transfer_table_to_dict(whole_schedule, nurse_pk_list, days_of_month):
+def transfer_table_to_dict(team_list, whole_schedule, nurse_pk_list, days_of_month):
     """
     연결리스트 형식으로 정렬된 스케쥴 리스트를 입력받아
     KEY는 간호사의 PK, Value는 개인의 한 달 스케쥴 리스트인 
@@ -263,15 +263,21 @@ def transfer_table_to_dict(whole_schedule, nurse_pk_list, days_of_month):
     """
 
     result_dict = dict()
-    for nurse_pk in nurse_pk_list:
-        result_dict[nurse_pk] = [0] * (days_of_month)
-    # 인덱스 어떻게 맞출건지 협의 필. 
+    # 팀 넘버마다 값을 받을 딕셔너리.. 추가. 
+    for team_number in team_list:
+        result_dict[team_number] = dict()
 
-    for date in range(days_of_month):
-        daily_schedule = whole_schedule[date]
-        for shift in range(1, 4):
-            for nurse in daily_schedule[shift]:
-                result_dict[nurse][date] = shift
+    for team_number in team_list:
+        nurse_pk_by_team = nurse_pk_list[team_number]
+        for nurse_pk in nurse_pk_by_team:
+            result_dict[team_number][nurse_pk] = [0] * (days_of_month)
+        # 인덱스 어떻게 맞출건지 협의 필. 
+
+        for date in range(days_of_month):
+            daily_schedule = whole_schedule[date][team_number]
+            for shift in range(1, 4):
+                for nurse in daily_schedule[shift]:
+                    result_dict[team_number][nurse][date] = shift
 
 
     return result_dict
@@ -314,11 +320,14 @@ def divide_nurse_info_by_team(
     # 1. 선언
     # 출력을 위한 dict 선언.
     divided_nurse_info_dict_by_team = dict()
+    nurse_pk_by_team = dict()
     for team_number in team_list:
         divided_nurse_info_dict_by_team[team_number] = dict()
+        nurse_pk_by_team[team_number] = list()
     
     # 2. 연산
-    for nurse_detail in nurse_profile_dict:
+    for nurse_detail in nurse_profile_dict.values():
+
         # 1) 앞부분에 필요한 값들.
         nurse_pk = nurse_detail[0]
         nurse_grade = nurse_detail[1]
@@ -328,22 +337,36 @@ def divide_nurse_info_by_team(
         # 2) 뒷부분에 필요한 값들. 
         nurse_last_month_schedule = nurse_last_months_schedule_dict[nurse_pk]
         nurse_last_shift = nurse_last_month_schedule[-1]
-        nurse_off_streaks = 0
+        nurse_shift_streaks = 0
+        if not nurse_last_shift and not nurse_last_month_schedule[-2]:
+            nurse_off_streaks = 2
+        elif not nurse_last_shift:
+            nurse_off_streaks = 1
+        else:
+            nurse_off_streaks = 0
+            for i in range(1, 6):
+                if nurse_last_month_schedule[-i]:
+                    nurse_shift_streaks += 1
+                else:
+                    break
         
         # 3) 딕셔너리에 삽입
+        nurse_pk_by_team[nurse_team].append(nurse_pk)
+
         divided_nurse_info_dict_by_team[nurse_team][nurse_pk] = [
             nurse_pk,
             nurse_grade,
             nurse_team,
             0,
+            nurse_shift_streaks,
             nurse_offs,
             0,
             0,
             nurse_off_streaks,
             nurse_last_shift
         ]
-
-    return divided_nurse_info_dict_by_team
+    pprint(nurse_pk_by_team)
+    return divided_nurse_info_dict_by_team, nurse_pk_by_team
 
 
 

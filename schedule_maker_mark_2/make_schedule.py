@@ -18,11 +18,12 @@ MONTHS_LAST_DAY = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 def make_monthly_schedule(
     team_list, # -1. 팀 정보. 리스트. 
     nurse_pk_list,  # 0. 간호사 PK 정보. 
-    nurse_info,     # 1. 간호사 정보. pk가 key, value가 아래와 같은 딕셔너리.  
     needed_nurses_shift_by_team,    # 3. shift당 필요한 간호사 수. 3의 배수로 기입 필수. 
     vacation_info,          # 4.연차 신청 정보. [딕셔너리. nurse_pk : set(날짜 묶음)]
     current_month,          # 5. 현재 월
     current_date,            # 6. 현재 날짜
+    nurse_profile_dict,         # 간호사 프로필 딕셔너리
+    nurse_last_month_schedule_dict, # 지난 달 근무표
 ):
 
     """
@@ -52,12 +53,17 @@ def make_monthly_schedule(
     # 1) 연산 전 준비
     # nurse_profile_dict 자료형 맞춰야 함. 
     ideal_schedule = make_ideal_counter(needed_nurses_shift_by_team)
-    divided_nurse_info = divide_nurse_info_by_team(
+    nurse_info, nurse_pk_list = divide_nurse_info_by_team(
         team_list=team_list,
-        nurse_profile_dict=dict(),
-        nurse_last_months_schedule_dict=dict()
+        nurse_profile_dict=nurse_profile_dict,
+        nurse_last_months_schedule_dict=nurse_last_month_schedule_dict
     )
+    pprint(nurse_info)
+    pprint(nurse_pk_list)
 
+
+    # 이 부분을 위의 함수에서 실제로 받아오는 방식대로 처리해야 한다. 
+    # nurse_pk_list = example_nurse_pk_dict
     # 1. 종료 조건
     # 정상 종료
     while current_date != MONTHS_LAST_DAY[current_month] + 1:
@@ -79,8 +85,8 @@ def make_monthly_schedule(
             for team_number in team_list:           
                 temporary_schedule, grade_counter_bit\
                     = make_daily_schedule(
-                    nurse_pk_list = nurse_pk_list,
-                    nurse_info = divided_nurse_info[team_number],
+                    nurse_pk_list = nurse_pk_list[team_number],
+                    nurse_info = nurse_info[team_number],
                     ideal_schedule = ideal_schedule,
                     current_date = current_date
                     )
@@ -100,21 +106,16 @@ def make_monthly_schedule(
             return 
 
         # 4. 스케쥴 업데이트
-        nurse_info = update_nurse_info(nurse_info, temporary_schedule)
-        whole_schedule.append(temporary_schedule)
+        for team_number in team_list:
+            nurse_info[team_number] = update_nurse_info(nurse_info[team_number], teamed_up_schedule[team_number])
+        whole_schedule.append(teamed_up_schedule)
         current_date += 1
 
-
-    # 출력 형식 변경. 
-    # 대규모 수정 필요. 
-    # whole_schedule 리스트가 
-    # 기존 counter sorted된 리스트에서
-    # 날짜마다 dict가 있고,
-    # 날짜 dict마다 key == 팀 번호, value= 기존과 같은 형태의 딕셔너리
     whole_schedule_dict = transfer_table_to_dict(
-        whole_schedule,
-        nurse_pk_list,
-        MONTHS_LAST_DAY[current_month]
+        team_list=team_list,
+        whole_schedule=whole_schedule,
+        nurse_pk_list=nurse_pk_list,
+        days_of_month = MONTHS_LAST_DAY[current_month]
         )
 
     return whole_schedule_dict, nurse_info
@@ -136,26 +137,58 @@ def make_monthly_schedule(
 +++ 팀 정보 들어가야함. 
 """
 
-example_nurse_info = {
-    1: [1, 0, 1, 0, 0, 0, 0, 0, 2, 0],
-    2: [2, 1, 1, 0, 0, 0, 0, 0, 2, 0],
-    3: [3, 2, 1, 0, 0, 0, 0, 0, 2, 0],
-    4: [4, 0, 1, 0, 0, 0, 0, 0, 2, 0],
-    5: [5, 1, 1, 0, 0, 0, 0, 0, 2, 0],
-    6: [6, 2, 1, 0, 0, 0, 0, 0, 2, 0],
-    7: [1, 0, 2, 0, 0, 0, 0, 0, 2, 0],
-    8: [2, 1, 2, 0, 0, 0, 0, 0, 2, 0],
-    9: [3, 2, 2, 0, 0, 0, 0, 0, 2, 0],
-    10: [4, 0, 2, 0, 0, 0, 0, 0, 2, 0],
-    11: [5, 1, 2, 0, 0, 0, 0, 0, 2, 0],
-    12: [6, 2, 2, 0, 0, 0, 0, 0, 2, 0],
-    13: [1, 0, 0, 0, 0, 0, 0, 0, 2, 0],
-    14: [2, 1, 0, 0, 0, 0, 0, 0, 2, 0],
-    15: [3, 2, 0, 0, 0, 0, 0, 0, 2, 0],
-    16: [4, 0, 0, 0, 0, 0, 0, 0, 2, 0],
-    17: [5, 1, 0, 0, 0, 0, 0, 0, 2, 0],
-    18: [6, 2, 0, 0, 0, 0, 0, 0, 2, 0],
+
+example_nurse_profile_dict = {
+    1: [1, 0, 1, 0],
+    2: [2, 1, 1, 0],
+    3: [3, 2, 1, 0],
+    4: [4, 0, 1, 0],
+    5: [5, 1, 1, 0],
+    6: [6, 2, 1, 0],
+    7: [7, 0, 2, 0],
+    8: [8, 1, 2, 0],
+    9: [9, 2, 2, 0],
+    10: [10, 0, 2, 0],
+    11: [11, 1, 2, 0],
+    12: [12, 2, 2, 0],
+    13: [13, 0, 3, 0],
+    14: [14, 1, 3, 0],
+    15: [15, 2, 3, 0],
+    16: [16, 0, 3, 0],
+    17: [17, 1, 3, 0],
+    18: [18, 2, 3, 0],
 }
+
+
+
+example_nurse_pk_dict = {
+    1: [1, 2, 3, 4, 5, 6],
+    2: [7, 8, 9, 10, 11, 12],
+    3: [13, 14, 15, 16, 17, 18],
+}
+
+example_nurse_last_month_schedule = {
+    1: [0, 2, 3, 3, 3, 3, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 3, 0, 0, 1, 2, 0],
+    2: [1, 1, 0, 0, 1, 2, 3, 3, 3, 0, 0, 2, 3, 3, 3, 0, 0, 0, 2, 3, 3, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0],
+    3: [0, 0, 2, 2, 2, 0, 0, 2, 2, 0, 0, 0, 1, 2, 0, 0, 2, 2, 0, 0, 2, 0, 0, 1, 1, 1, 1, 1, 0, 0, 2],
+    4: [3, 3, 0, 0, 0, 1, 2, 0, 0, 3, 3, 3, 0, 0, 0, 3, 3, 0, 0, 2, 0, 0, 2, 2, 0, 0, 3, 0, 0, 1, 1],
+    5: [2, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 0, 0, 0, 2, 2, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 0, 0, 3, 3, 0],
+    6: [0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 3, 0, 0, 0, 2, 3, 3, 0, 0, 0, 3, 0, 0, 3],
+    7: [1, 0, 0, 2, 0, 0, 3, 3, 0, 0, 0, 2, 0, 0, 2, 0, 0, 0, 3, 3, 0, 0, 2, 2, 2, 3, 0, 0, 1, 1, 0],
+    8: [0, 2, 2, 3, 3, 3, 0, 0, 3, 0, 0, 0, 3, 3, 0, 0, 2, 2, 0, 0, 1, 1, 1, 1, 3, 0, 0, 3, 0, 0, 1],
+    9: [2, 0, 0, 1, 2, 0, 0, 0, 1, 2, 2, 0, 0, 2, 0, 0, 3, 3, 0, 0, 3, 3, 3, 0, 0, 2, 2, 2, 2, 0, 0],
+    10: [0, 1, 1, 0, 0, 0, 0, 0, 2, 3, 0, 0, 1, 1, 1, 2, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 0, 1, 3, 0, 0],
+    11: [0, 0, 3, 0, 0, 2, 2, 2, 0, 0, 1, 1, 2, 0, 0, 3, 0, 0, 1, 2, 2, 0, 0, 0, 1, 1, 1, 0, 0, 3, 3],
+    12: [3, 3, 0, 0, 1, 1, 1, 1, 0, 0, 3, 3, 0, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 2, 2],
+    13: [3, 3, 3, 0, 0, 1, 1, 1, 2, 2, 0, 0, 0, 3, 3, 0, 0, 3, 3, 0, 0, 2, 0, 0, 1, 2, 0, 0, 0, 2, 2],
+    14: [2, 2, 2, 2, 2, 0, 0, 3, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 3, 0, 0, 0, 1, 1, 1],
+    15: [0, 0, 1, 1, 0, 0, 2, 2, 0, 0, 2, 0, 0, 0, 1, 1, 0, 0, 2, 3, 0, 0, 2, 0, 0, 0, 2, 3, 0, 0, 0],
+    16: [1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 2, 3, 3, 0, 0, 0, 2, 3, 3, 3, 0, 0, 0, 1, 3, 3, 3],
+    17: [0, 0, 0, 0, 0, 2, 0, 0, 3, 0, 0, 2, 2, 2, 0, 0, 1, 0, 0, 2, 3, 0, 0, 2, 2, 3, 3, 0, 0, 0, 0],
+    18: [0, 0, 0, 3, 3, 3, 3, 0, 0, 3, 3, 3, 3, 0, 0, 2, 2, 2, 0, 0, 1, 1, 1, 0, 0, 1, 1, 2, 2, 0, 0],
+}
+
+
 
 example_nurse_pk_list = [
     1, 2, 3, 4, 5, 6,
@@ -164,23 +197,61 @@ example_nurse_pk_list = [
     ]
 
 start_time = time.time()
+
+
 result, modified_nurse_info = make_monthly_schedule(
-    team_list=[0, 1, 2],
+    team_list=[1, 2, 3],
     nurse_pk_list=example_nurse_pk_list,
-    nurse_info=example_nurse_info,
     needed_nurses_shift_by_team=1,
     vacation_info=[],
     current_month=10,
-    current_date=1,    
+    current_date=1,
+    nurse_profile_dict= example_nurse_profile_dict,
+    nurse_last_month_schedule_dict=example_nurse_last_month_schedule,    
     )
+
+
 print('디버깅용 딕셔너리')
 pprint(modified_nurse_info)
 print()
-i = 1
 
-for nums in example_nurse_pk_list:
-    print(nums, result[nums])
+for team_number in [1, 2, 3]:
+    for nums in example_nurse_pk_dict[team_number]:
+        print(nums, result[team_number][nums])
 
 end_time = time.time()
 print('실행 시간')
-print(end_time - start_time)
+print(f'{(end_time - start_time)*1000}ms')
+
+
+
+
+
+example_nurse_info_dict = {
+    1 : {
+        1: [1, 0, 1, 0, 0, 0, 0, 0, 2, 0],
+        2: [2, 1, 1, 0, 0, 0, 0, 0, 2, 0],
+        3: [3, 2, 1, 0, 0, 0, 0, 0, 2, 0],
+        4: [4, 0, 1, 0, 0, 0, 0, 0, 2, 0],
+        5: [5, 1, 1, 0, 0, 0, 0, 0, 2, 0],
+        6: [6, 2, 1, 0, 0, 0, 0, 0, 2, 0]
+    },
+
+    2: {
+        7: [1, 0, 2, 0, 0, 0, 0, 0, 2, 0],
+        8: [2, 1, 2, 0, 0, 0, 0, 0, 2, 0],
+        9: [3, 2, 2, 0, 0, 0, 0, 0, 2, 0],
+        10: [4, 0, 2, 0, 0, 0, 0, 0, 2, 0],
+        11: [5, 1, 2, 0, 0, 0, 0, 0, 2, 0],
+        12: [6, 2, 2, 0, 0, 0, 0, 0, 2, 0],
+    },
+
+    3: {
+        13: [1, 0, 0, 0, 0, 0, 0, 0, 2, 0],
+        14: [2, 1, 0, 0, 0, 0, 0, 0, 2, 0],
+        15: [3, 2, 0, 0, 0, 0, 0, 0, 2, 0],
+        16: [4, 0, 0, 0, 0, 0, 0, 0, 2, 0],
+        17: [5, 1, 0, 0, 0, 0, 0, 0, 2, 0],
+        18: [6, 2, 0, 0, 0, 0, 0, 0, 2, 0],
+    }
+}
