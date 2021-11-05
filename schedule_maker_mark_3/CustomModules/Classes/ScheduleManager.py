@@ -1,6 +1,6 @@
 from calendar import monthrange
 import calendar
-from heapq import heappop
+from heapq import heappop, heappush
 from .PriorityManager import PriorityManager
 
 
@@ -13,7 +13,7 @@ class ScheduleManager:
         self.team_numbers = team_number_list
         self.priority_stack = []
         self.daily_schedule_stack = []
-        self.ideal_schedule_counter = [0, 0, 0, 0]
+        self.ideal_schedule_counter = [0, 1, 1, 1]
         self.priority_manager_dict = dict()
         self.whole_schedule = dict()
         self.nurses_team_dict = dict()
@@ -91,22 +91,24 @@ class ScheduleManager:
         recured_by = 0
         remade_same_date = 0
 
-        while current_day < last_day and recured_by < 20:
-
-            validation_token = 0
+        while current_day < last_day and recured_by < 40:
+            validation_token = 1
             todays_schedule = [[] for _ in range(4)]
 
             for team_num in self.team_numbers:
-                
+            
                 team_info = self.get_team_info(team_num)
                 team = DailyManager(self.ideal_schedule_counter)
                 
                 team_schedule = team.build_schedule(team_info, current_day)
-                for shift in range(4):
-                    for nurse_pk in team_schedule[shift]:
-                        todays_schedule[shift].append(nurse_pk)
-                validation_token |= team.pop_grade_validation_token()
-            
+                if team_schedule is not None:
+                    for shift in range(4):
+                        for nurse_pk in team_schedule[shift]:
+                            todays_schedule[shift].append(nurse_pk)
+                    validation_token |= team.pop_grade_validation_token()
+                else:
+                    validation_token = 0
+
             if validation_token == 15:
                 self.priority_stack.append(self.priority_manager_dict)
                 self.daily_schedule_stack.append(todays_schedule)
@@ -143,16 +145,9 @@ class ScheduleManager:
         todays schedule 예상 형태
         [[7, 8, 10], [9], [11], [12]]
         """
-        # print('updating')
-        # print(todays_schedule)
         for shift in range(4):
             for nurse in todays_schedule[shift]:
                 self.priority_manager_dict[nurse].update_a_shift(shift)
-                if nurse == 1:
-                    print('nurse1', end=' ')
-                    print(self.priority_manager_dict[nurse].monthly_shift, end=' ')
-                    print(self.priority_manager_dict[nurse].weekly_shift, end=' ')
-                    print(self.priority_manager_dict[nurse].compute_priority(2, 11))
 
     def get_whole_schedule(self) -> dict:
         schedule_dict = dict()
@@ -190,7 +185,8 @@ class DailyManager:
             for shift in range(4):
                 priority = nurse.compute_priority(shift, date)
                 if priority is not None:
-                    temp_que.append((priority, nurse.nurse_pk, nurse.nurse_grade, shift))
+                    heappush(temp_que, (priority, nurse.nurse_pk, nurse.nurse_grade, shift))
+
         self.priority_que = temp_que
         
     def place_shifts(self) -> list:
@@ -203,13 +199,16 @@ class DailyManager:
             priority, nurse_pk, grade, shift = heappop(self.priority_que)
             if shift and current_schedule_counter[shift] >= self.ideal_schedule[shift]:
                 continue
+
             if nurse_pk in placed_nurses_set:
                 continue
-            
+
             current_schedule_counter[shift] += 1
             schedule_table[shift].append(nurse_pk)
             placed_nurses_set.add(nurse_pk)
-            current_valdation_token |= (1 << shift)
+
+            if grade:
+                current_valdation_token |= (1 << shift)
         
         self.update_validation_token(current_valdation_token)
         return schedule_table
@@ -218,16 +217,20 @@ class DailyManager:
     def build_schedule(self, nurse_priority_infos, date) -> list:
         # while문 주의!!!!
         is_validate = False
-        while not is_validate:
-            self.build_priority_que(nurse_priority_infos, date)
-            # print(self.priority_que)
-
-            completed_schedule = self.place_shifts()
+        recursed_by = 0
+        while not is_validate and recursed_by < 50:
             
+            self.build_priority_que(nurse_priority_infos, date)
+            completed_schedule = self.place_shifts()
+            recursed_by += 1
+
             for shift in range(1, 4):
                 if len(completed_schedule[shift]) != self.ideal_schedule[shift]:
                     break
             else:
                 is_validate = True
 
-        return completed_schedule
+        if recursed_by < 30:
+            return completed_schedule
+        else:
+            return None

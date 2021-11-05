@@ -96,11 +96,11 @@ class PriorityManager:
         
         # 2) 최 우선 처리 (우선도 0)
         # (1) 휴가 당일
-        if today in self.vacation_date:
-            return -5000
+        # if today in self.vacation_date:
+        #     return -5000
 
         # 2. 우선도 연산 시작.
-        priority_token = randrange(500, 50000)
+        priority_token = randrange(100, 200)
         # # 1) 연속 근무
         # # (1) shift_streak 2 미만
         # # 예상 값: 300 ~ 700
@@ -116,5 +116,5 @@ class PriorityManager:
         # if shift != self.last_shift and self.shift_streaks >= 2:
         #     priority_token += randrange(300, 500)
         # print(-priority_token)
-        return -priority_token
+        return priority_token
         
