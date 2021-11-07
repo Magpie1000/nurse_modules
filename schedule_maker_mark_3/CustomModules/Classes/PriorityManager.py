@@ -16,6 +16,9 @@ class PriorityManager:
         self.weekly_schedule = deque([0, 0, 0, 0, 0, 0, 0])
         self.vacation_date = set()
 
+    def __repr__(self) -> str:
+        return f'pk:{self.nurse_pk}, team:{self.team_pk}, grade:{self.nurse_grade} monthly_shift:{self.monthly_night_shift}, last_weeks_schedule: {self.weekly_schedule}'
+
     def personalize(self, last_schedule):
 
         # 1. weekly_schedule 개인화.
@@ -94,27 +97,32 @@ class PriorityManager:
         if shift and today in self.vacation_date:
             return None
         
-        # 2) 최 우선 처리 (우선도 0)
+        priority_token = 0
+        # 2) 최 우선 처리 (우선도 5000)
         # (1) 휴가 당일
-        # if today in self.vacation_date:
-        #     return -5000
+        if not shift and today in self.vacation_date:
+            priority_token += 5000
+            return -priority_token
+        
+        priority_token = randrange(0, 1500)
 
         # 2. 우선도 연산 시작.
-        priority_token = randrange(100, 200)
         # # 1) 연속 근무
-        # # (1) shift_streak 2 미만
-        # # 예상 값: 300 ~ 700
-        # if shift == self.last_shift and self.shift_streaks < 2:
-        #     priority_token += randrange(200, 500)
+        # (1) shift_streak 2 미만
+        # 예상 값: 300 ~ 700
+        if shift == self.last_shift and self.shift_streaks < 2:
+            priority_token += randrange(400, 800)
     
         # # (2) shift_streak 2 이상
         # # 예상 값: 500 ~ 850
-        # if shift == self.last_shift and self.shift_streaks >= 2:
-        #     priority_token -= randrange(100, 300)
+        if shift == self.last_shift and self.shift_streaks >= 2:
+            priority_token -= randrange(300, 500)
+        # print(self)
+
+        # # (3) 2연속 근무 후 근무하려고 
+        if shift == self.last_shift + 1 and self.shift_streaks >= 2:
+            priority_token += randrange(400, 800)
 
 
-        # if shift != self.last_shift and self.shift_streaks >= 2:
-        #     priority_token += randrange(300, 500)
-        # print(-priority_token)
-        return priority_token
+        return -priority_token
         

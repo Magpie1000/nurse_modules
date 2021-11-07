@@ -14,7 +14,7 @@ class ScheduleManager:
         self.priority_stack = []
         self.daily_schedule_stack = []
         self.ideal_schedule_counter = [0, 1, 1, 1]
-        self.priority_manager_dict = dict()
+        self.current_priorities = dict()
         self.whole_schedule = dict()
         self.nurses_team_dict = dict()
         self.team_nurse_dict = dict()
@@ -49,7 +49,7 @@ class ScheduleManager:
             manager.team_pk = team_pk
             manager.offs = off_count
 
-            self.priority_manager_dict[nurse_pk] = manager
+            self.current_priorities[nurse_pk] = manager
             self.team_nurse_dict[team_pk].add(nurse_pk)
             self.nurses_team_dict[nurse_pk] = team_pk
     
@@ -65,7 +65,7 @@ class ScheduleManager:
         2. value: [0, 1, 2, 3, 1.....] 형태로 된 리스트. 
         """
         for nurse_pk, schedule in schedules.items():
-            self.priority_manager_dict[nurse_pk].personalize(schedule)
+            self.current_priorities[nurse_pk].personalize(schedule)
 
     def get_team_info(self, team_number) -> dict:
         """
@@ -77,7 +77,7 @@ class ScheduleManager:
         """
         team_info_dict = dict()
         for nurse_pk in self.team_nurse_dict[team_number]:
-            team_info_dict[nurse_pk] = self.priority_manager_dict[nurse_pk]
+            team_info_dict[nurse_pk] = self.current_priorities[nurse_pk]
         return team_info_dict
 
     def create_monthly_schedule(self, date) -> None:
@@ -107,10 +107,10 @@ class ScheduleManager:
                             todays_schedule[shift].append(nurse_pk)
                     validation_token |= team.pop_grade_validation_token()
                 else:
-                    validation_token = 0
+                    validation_token = 1
 
             if validation_token == 15:
-                self.priority_stack.append(self.priority_manager_dict)
+                self.priority_stack.append(self.current_priorities)
                 self.daily_schedule_stack.append(todays_schedule)
                 self.update_nurse_priority_manager(todays_schedule)
                 remade_same_date = 0
@@ -120,7 +120,7 @@ class ScheduleManager:
                 
                 if current_day:
                     current_day -= 1
-                    self.priority_manager_dict = self.priority_stack.pop()
+                    self.current_priorities = self.priority_stack.pop()
                 
                 remade_same_date = 0
                 recured_by += 1
@@ -130,7 +130,7 @@ class ScheduleManager:
             else:
                 remade_same_date += 1
         
-        return
+        self.update_whole_schedule()
 
             
 
@@ -147,9 +147,9 @@ class ScheduleManager:
         """
         for shift in range(4):
             for nurse in todays_schedule[shift]:
-                self.priority_manager_dict[nurse].update_a_shift(shift)
+                self.current_priorities[nurse].update_a_shift(shift)
 
-    def get_whole_schedule(self) -> dict:
+    def update_whole_schedule(self) -> dict:
         schedule_dict = dict()
         LENGTH = len(self.daily_schedule_stack)
         for nurse_pk in self.nurses_team_dict.keys():
@@ -160,10 +160,23 @@ class ScheduleManager:
                 for nurse_pk in self.daily_schedule_stack[date][shift]:
                     schedule_dict[nurse_pk][date] = shift
 
-        return schedule_dict
+        self.whole_schedule = schedule_dict
 
     def get_stack(self) -> list:
         return self.daily_schedule_stack
+
+    def get_schedule(self) -> dict:
+        return self.whole_schedule
+
+    def print_schedule_by_day(self) -> None:
+        for day in range(len(self.daily_schedule_stack)):
+            print(f'day{day+1}: {self.daily_schedule_stack[day]}')
+
+    def print_schedule_by_nurse(self) -> None:
+        for key, value in self.whole_schedule.items():
+            print(key, value)
+
+
 
 
 class DailyManager:
@@ -172,6 +185,9 @@ class DailyManager:
         self.priority_que = []
         self.ideal_schedule = ideal_schedule
         self.grade_validation_token = 1
+
+    def __repr__(self) -> str:
+        return f'ideal_schedule: {self.ideal_schedule}, validation_token: {self.grade_validation_token}'
 
     def pop_grade_validation_token(self) -> int:
         return self.grade_validation_token    

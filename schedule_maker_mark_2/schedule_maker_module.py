@@ -1,6 +1,7 @@
 import heapq
 import random
 from pprint import pprint
+
 # 카운터 리스트 제작 함수 
 def make_ideal_counter(needed_nurses_per_shift):
     """
@@ -159,11 +160,11 @@ def place_shifts(
     1. schedule_table : 스케쥴 테이블
     2. grade_counter_bit : 저연차 간호사만 근무하는 것을 방지하기 위한 비트값. 
     """
-    IDEAL_SCHEDULE = ideal_schedule
+    IDEAL_SCHEDULE = ideal_schedule # [0, 1, 1, 1]
     schedule_table = [[] for _ in range(4)] # 각각 off, day, evening, night.
-    current_schedule_counter = [0] * 4
+    current_schedule_counter = [0] * 4  # [0, 1, 1, 1]
     # 비트마스킹을 활용, day, evening, night 에 근무자가 있는지 체크. 
-    grade_counter_bit = 0
+    grade_counter_bit = 0   # 0010
     placed_nurse_set = set()
 
     while priority_que:
@@ -264,23 +265,24 @@ def transfer_table_to_dict(team_list, whole_schedule, nurse_pk_list, days_of_mon
 
     result_dict = dict()
     # 팀 넘버마다 값을 받을 딕셔너리.. 추가. 
-    for team_number in team_list:
-        result_dict[team_number] = dict()
+    # for team_number in team_list:
+    #     result_dict[team_number] = dict()
 
     for team_number in team_list:
         nurse_pk_by_team = nurse_pk_list[team_number]
         for nurse_pk in nurse_pk_by_team:
-            result_dict[team_number][nurse_pk] = [0] * (days_of_month)
+            result_dict[nurse_pk] = [0] * (days_of_month)
         # 인덱스 어떻게 맞출건지 협의 필. 
 
         for date in range(days_of_month):
             daily_schedule = whole_schedule[date][team_number]
             for shift in range(1, 4):
                 for nurse in daily_schedule[shift]:
-                    result_dict[team_number][nurse][date] = shift
+                    result_dict[nurse][date] = shift
 
-
+    # print(result_dict)
     return result_dict
+
 
 
 # 분할 부분. 

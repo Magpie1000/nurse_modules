@@ -12,7 +12,7 @@ from validation_checker_module import (
 
 from pprint import pprint
 import time
-
+# v파이썬 캘린더. 
 MONTHS_LAST_DAY = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 def make_monthly_schedule(
@@ -73,7 +73,7 @@ def make_monthly_schedule(
         while not is_enough_grade and recursion_time < 15:
 
             teamed_up_schedule = dict()
-            whole_team_grade_checker = 1    
+            whole_team_grade_checker = 1    # bit 1111 1111
             
             # 여기 매개변수로 팀별 인원수가 들어가야 함. 
             for team_number in team_list:           
@@ -88,7 +88,7 @@ def make_monthly_schedule(
                 teamed_up_schedule[team_number] = temporary_schedule
                 whole_team_grade_checker |= grade_counter_bit
 
-            if whole_team_grade_checker == 15:
+            if whole_team_grade_checker == 15:  # 1111
                 whole_team_temp_schedule.append(teamed_up_schedule)
                 is_enough_grade = True
                 
@@ -195,7 +195,6 @@ start_time = time.time()
 
 result, modified_nurse_info = make_monthly_schedule(
     team_list=[1, 2, 3],
-    # nurse_pk_list=example_nurse_pk_list,
     needed_nurses_shift_by_team=1,
     vacation_info=[],
     current_month=10,
@@ -218,34 +217,3 @@ print('실행 시간')
 print(f'{(end_time - start_time)*1000}ms')
 
 
-
-
-
-# example_nurse_info_dict = {
-#     1 : {
-#         1: [1, 0, 1, 0, 0, 0, 0, 0, 2, 0],
-#         2: [2, 1, 1, 0, 0, 0, 0, 0, 2, 0],
-#         3: [3, 2, 1, 0, 0, 0, 0, 0, 2, 0],
-#         4: [4, 0, 1, 0, 0, 0, 0, 0, 2, 0],
-#         5: [5, 1, 1, 0, 0, 0, 0, 0, 2, 0],
-#         6: [6, 2, 1, 0, 0, 0, 0, 0, 2, 0]
-#     },
-
-#     2: {
-#         7: [1, 0, 2, 0, 0, 0, 0, 0, 2, 0],
-#         8: [2, 1, 2, 0, 0, 0, 0, 0, 2, 0],
-#         9: [3, 2, 2, 0, 0, 0, 0, 0, 2, 0],
-#         10: [4, 0, 2, 0, 0, 0, 0, 0, 2, 0],
-#         11: [5, 1, 2, 0, 0, 0, 0, 0, 2, 0],
-#         12: [6, 2, 2, 0, 0, 0, 0, 0, 2, 0],
-#     },
-
-#     3: {
-#         13: [1, 0, 0, 0, 0, 0, 0, 0, 2, 0],
-#         14: [2, 1, 0, 0, 0, 0, 0, 0, 2, 0],
-#         15: [3, 2, 0, 0, 0, 0, 0, 0, 2, 0],
-#         16: [4, 0, 0, 0, 0, 0, 0, 0, 2, 0],
-#         17: [5, 1, 0, 0, 0, 0, 0, 0, 2, 0],
-#         18: [6, 2, 0, 0, 0, 0, 0, 0, 2, 0],
-#     }
-# }
