@@ -22,12 +22,12 @@ example_nurse_profile = {
     16: [16, 0, 3, 0],
     17: [17, 1, 3, 0],
     18: [18, 2, 3, 0],
-    # 19: [19, 2, 1, 0],
-    # 20: [20, 2, 2, 0],
-    # 21: [21, 2, 1, 0],
-    # 22: [22, 2, 2, 0],
-    # 23: [23, 2, 3, 0],
-    # 24: [24, 2, 3, 0],
+    19: [19, 2, 1, 0],
+    20: [20, 2, 2, 0],
+    21: [21, 2, 1, 0],
+    22: [22, 2, 2, 0],
+    23: [23, 2, 3, 0],
+    24: [24, 2, 3, 0],
 }
 
 example_nurse_last_schedule = {
@@ -57,25 +57,22 @@ example_nurse_last_schedule = {
     # 24: [3, 3, 0, 0, 1, 1, 1, 1, 0, 0, 3, 3, 0, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 2, 2],
 }
 
-starttime  = time.time()
-example_date = '2021-11-01'
-current_month = ScheduleManager(team_number_list=example_team_list)
-current_month.push_nurse_info(example_nurse_profile)
-current_month.push_last_schedules(example_nurse_last_schedule)
-current_month.set_needed_nurses_by_team(1)
-current_month.create_monthly_schedule(date=example_date)
 
-# 디버깅용 기능 추가
-current_month.print_schedule_by_day()
-current_month.print_schedule_by_nurse()
+for times in range(1000):
+    starttime  = time.time()
+    example_date = '2021-11-01'
+    current_month = ScheduleManager(team_number_list=example_team_list)
+    current_month.push_nurse_info(example_nurse_profile)
+    current_month.push_last_schedules(example_nurse_last_schedule)
+    current_month.set_needed_nurses_by_team(2)
+    current_month.create_monthly_schedule(date=example_date)
 
+    # 디버깅용 기능 추가
+    # current_month.print_schedule_by_day()
+    # current_month.print_schedule_by_nurse()
+    # print(current_month.nurses_team_dict)
+    # print(current_month.team_nurse_dict)
 
+    endtime = time.time()
 
-
-
-print(current_month.nurses_team_dict)
-print(current_month.team_nurse_dict)
-
-endtime = time.time()
-
-print(f'실행시간 {(endtime - starttime)*1000} ms')
+    print(f'실행시간 {(endtime - starttime)*1000} ms')
