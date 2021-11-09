@@ -1,7 +1,7 @@
 from CustomModules.Classes.ScheduleManager import ScheduleManager
 import time
 
-example_team_list = [1, 2, 3]
+example_team_list = [1, 2, 3]  # 4, 5, 6, 7, 8, 9, 10, 11, 12
 
 example_nurse_profile = {
     1: [1, 0, 1, 0],
@@ -23,11 +23,59 @@ example_nurse_profile = {
     17: [17, 1, 3, 0],
     18: [18, 2, 3, 0],
     19: [19, 2, 1, 0],
-    20: [20, 2, 2, 0],
-    21: [21, 2, 1, 0],
+    20: [20, 2, 1, 0],
+    21: [21, 2, 2, 0],
     22: [22, 2, 2, 0],
     23: [23, 2, 3, 0],
     24: [24, 2, 3, 0],
+    # 25: [25, 0, 4, 0],
+    # 26: [26, 1, 4, 0],
+    # 27: [27, 2, 4, 0],
+    # 28: [28, 0, 4, 0],
+    # 29: [29, 1, 4, 0],
+    # 30: [30, 2, 4, 0],
+    # 31: [31, 0, 5, 0],
+    # 32: [32, 1, 5, 0],
+    # 33: [33, 2, 5, 0],
+    # 34: [34, 0, 5, 0],
+    # 35: [35, 1, 5, 0],
+    # 36: [36, 2, 5, 0],
+    # 37: [37, 0, 6, 0],
+    # 38: [38, 1, 6, 0],
+    # 39: [39, 2, 6, 0],
+    # 40: [40, 0, 6, 0],
+    # 41: [41, 1, 6, 0],
+    # 42: [42, 2, 6, 0],
+    # 43: [43, 2, 7, 0],
+    # 44: [44, 2, 7, 0],
+    # 45: [45, 2, 7, 0],
+    # 46: [46, 2, 7, 0],
+    # 47: [47, 2, 7, 0],
+    # 48: [48, 2, 7, 0],
+    # 49: [49, 0, 8, 0],
+    # 50: [50, 1, 8, 0],
+    # 51: [51, 2, 8, 0],
+    # 52: [52, 0, 8, 0],
+    # 53: [53, 1, 8, 0],
+    # 54: [54, 2, 8, 0],
+    # 55: [55, 0, 9, 0],
+    # 56: [56, 1, 9, 0],
+    # 57: [57, 2, 9, 0],
+    # 58: [58, 0, 9, 0],
+    # 59: [59, 1, 9, 0],
+    # 60: [60, 2, 9, 0],
+    # 61: [61, 0, 10, 0],
+    # 62: [62, 1, 10, 0],
+    # 63: [63, 2, 10, 0],
+    # 64: [64, 0, 10, 0],
+    # 65: [65, 1, 10, 0],
+    # 66: [66, 2, 10, 0],
+    # 67: [67, 2, 11, 0],
+    # 68: [68, 2, 11, 0],
+    # 69: [69, 2, 11, 0],
+    # 70: [70, 2, 11, 0],
+    # 71: [71, 2, 11, 0],
+    # 72: [72, 2, 11, 0],
 }
 
 example_nurse_last_schedule = {
@@ -57,9 +105,10 @@ example_nurse_last_schedule = {
     # 24: [3, 3, 0, 0, 1, 1, 1, 1, 0, 0, 3, 3, 0, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 2, 2],
 }
 
+starttime  = time.time()
+runs = 1000
+for times in range(runs):
 
-for times in range(1000):
-    starttime  = time.time()
     example_date = '2021-11-01'
     current_month = ScheduleManager(team_number_list=example_team_list)
     current_month.push_nurse_info(example_nurse_profile)
@@ -73,6 +122,11 @@ for times in range(1000):
     # print(current_month.nurses_team_dict)
     # print(current_month.team_nurse_dict)
 
-    endtime = time.time()
 
-    print(f'실행시간 {(endtime - starttime)*1000} ms')
+endtime = time.time()
+print(f'팀 갯수: {len(example_team_list)}')
+print(f'전체 실행시간 {(endtime - starttime)}sec.')
+print(f'평균 실행시간 {(endtime - starttime)/runs}sec')
+
+# 부하 테스트 결과
+

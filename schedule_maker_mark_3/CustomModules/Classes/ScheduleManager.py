@@ -2,6 +2,7 @@ from calendar import monthrange
 import calendar
 from heapq import heappop, heappush
 from .PriorityManager import PriorityManager
+from copy import deepcopy
 
 
 class ScheduleManager:
@@ -15,6 +16,7 @@ class ScheduleManager:
         self.daily_schedule_stack = []
         self.ideal_schedule_counter = [0, 1, 1, 1]
         self.recursed_days = 0
+        self.original_priorities = dict()
         self.current_priorities = dict()
         self.whole_schedule = dict()
         self.nurses_team_dict = dict()
@@ -91,7 +93,7 @@ class ScheduleManager:
         return team_info_dict
 
     def create_monthly_schedule(self, date) -> None:
-
+        self.original_priorities = deepcopy(self.current_priorities)
         year = int(date[:4])
         month = int(date[5:7])
         day = int(date[-2:])
@@ -100,16 +102,19 @@ class ScheduleManager:
         last_day = monthrange(year, month)[1]
         remade_same_date = 0
 
-        while current_day < last_day and self.recursed_days < 40:
+        while current_day < last_day and self.recursed_days < 21:
             validation_token = 1
             todays_schedule = [[] for _ in range(4)]
 
             for team_num in self.team_numbers:
-            
+                
+                if validation_token == 25:
+                    break
+
                 team_info = self.get_team_info(team_num)
                 team = DailyManager(self.ideal_schedule_counter)
-                
                 team_schedule = team.build_schedule(team_info, current_day)
+                
                 if team_schedule is not None:
                     for shift in range(4):
                         for nurse_pk in team_schedule[shift]:
@@ -129,7 +134,8 @@ class ScheduleManager:
             elif remade_same_date == 10:
                 current_day -= self.recurse_schedule(current_day)
                 remade_same_date = 0
-                print(f'recursed_by {self.recursed_days}')
+                if self.recursed_days == 20:
+                    print(f'recursed_by {self.recursed_days}')
                 
             else:
                 remade_same_date += 1
@@ -166,7 +172,7 @@ class ScheduleManager:
 
         self.whole_schedule = schedule_dict
 
-    def recurse_schedule(self, recurse_time) -> int:
+    def recurse_schedule(self, current_date) -> int:
         """
         매개변수:
         1. 현재 작성중인 날짜.
@@ -176,21 +182,22 @@ class ScheduleManager:
         """
         self.recursed_days += 1
 
-        if not recurse_time:
+        if not current_date:
             return 0
         
-        # 8번째 시도마다 '맨 처음'으로 돌아간다
-        print(self.recursed_days)
+        # 5번째 시도마다 '맨 처음'으로 돌아간다
+        
         if self.recursed_days % 5 == 0:
-            print(self.recursed_days)
-            self.current_priorities = self.priority_stack[0]
+            self.current_priorities = self.original_priorities
             self.priority_stack.clear()
             self.daily_schedule_stack.clear()
-            return recurse_time
+            return current_date
 
         # 최대 6일 전까지 돌아간다. 
-        if recurse_time > 6:
+        if current_date > 6:
             recurse_time = 6
+        else:
+            recurse_time = current_date
 
         for _ in range(recurse_time):
             self.current_priorities = self.priority_stack.pop()
@@ -275,7 +282,7 @@ class DailyManager:
         is_validate = False
         recursed_by = 0
 
-        while not is_validate and recursed_by < 50:
+        while not is_validate and recursed_by < 30:
             
             self.build_priority_que(nurse_priority_infos, date)
             completed_schedule = self.place_shifts()

@@ -125,8 +125,7 @@ class PriorityManager:
         # # 예상 값: 500 ~ 850
         if shift == self.last_shift and self.shift_streaks >= 2:
             priority_token -= randrange(300, 500)
-        # print(self)
-
+            
         # # (3) 2연속 근무 후 근무하려고 
         if shift == self.last_shift + 1 and self.shift_streaks >= 2:
             priority_token += randrange(400, 800)
